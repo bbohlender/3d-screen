@@ -65,13 +65,10 @@ const camera = new PerspectiveCamera(
   0.01,
   10
 );
-camera.position.z = 5;
-
-//new OrbitControls(camera, canvas);
+camera.position.z = 1;
 
 const scene = new Scene();
 scene.add(new GridHelper());
-scene.background = new Color("red");
 
 const geometry = new PlaneGeometry(1, 1, 400, 200);
 const material = new ShaderMaterial({
@@ -141,7 +138,7 @@ async function predictDepth(source: HTMLVideoElement) {
   const preprocessedInput = expandDims(upsampledraw_input);
   const divided = div(preprocessedInput, 255.0);
   const result = model.predict(divided) as Tensor<Rank>;
-  const output = prepareOutput(result, source.videoWidth, source.videoHeight);
+  const output = prepareOutput(result);
   const data = await output.data();
 
   divided.dispose();
@@ -159,9 +156,7 @@ async function predictDepth(source: HTMLVideoElement) {
 }
 
 function prepareOutput(
-  tensor: TensorLike | Tensor<Rank>,
-  width: number,
-  height: number
+  tensor: TensorLike | Tensor<Rank>
 ) {
   return tidy(() => {
     tensor = relu(tensor);
