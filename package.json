@@ -1,0 +1,26 @@
+{
+  "name": "depth-prediction",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@lookingglass/webxr": "^0.4.0",
+    "@tensorflow-models/body-segmentation": "^1.0.2",
+    "@tensorflow-models/depth-estimation": "^0.0.4",
+    "@tensorflow/tfjs-backend-webgl": "^4.11.0",
+    "@tensorflow/tfjs-backend-webgpu": "^4.11.0",
+    "@tensorflow/tfjs-converter": "^4.11.0",
+    "@tensorflow/tfjs-core": "^4.11.0",
+    "three": "^0.156.1",
+    "vite": "^4.4.9"
+  },
+  "devDependencies": {
+    "@types/three": "^0.156.0"
+  }
+}
