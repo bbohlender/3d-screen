@@ -74,7 +74,7 @@ const material = new ShaderMaterial({
 
   void main() {
     if(vUv.x > 0.0) {
-      gl_FragColor = texture2D(colorMap, vUv.xy + vec2(0.0, 0.5));
+      gl_FragColor = texture2D(colorMap, vUv.xy * vec2(2.0, 1.0) + vec2(0.0, 0.5));
     } else {
       gl_FragColor = texture2D(depthMap, vUv.xy * vec2(2.0, -1.0) + vec2(1.0, 0.5));
     }
@@ -97,64 +97,68 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
 });
 
-canvas.addEventListener("click", async () => {
-  const video = document.createElement("video");
-  video.src = "./video2.mp4";
-  video.play();
-  material.uniforms.colorMap.value = new VideoTexture(video);
-  material.needsUpdate = true;
-  renderer.setAnimationLoop(() => startRender(video));
-  const stream = canvas.captureStream(30);
+canvas.onclick = () => {
+  canvas.onclick = undefined;
+  const input = document.createElement("input");
+  input.type = "file";
+  input.onchange = () => {
+    const file = input.files[0];
+    if (file == null) {
+      return;
+    }
+    const video = document.createElement("video");
+    video.onended = () => mediaRecorder.stop();
+    video.src = URL.createObjectURL(file);
+    video.play();
+    material.uniforms.colorMap.value = new VideoTexture(video);
+    material.needsUpdate = true;
+    renderer.setAnimationLoop(() => startRender(video));
+    const stream = canvas.captureStream(30);
 
-  const mediaRecorder = new MediaRecorder(stream, {
-    mimeType: "video/mp4; codecs=vp9",
-  });
+    const mediaRecorder = new MediaRecorder(stream, {
+      mimeType: "video/webm; codecs=vp9",
+    });
 
-  const recordedChunks = [];
+    const recordedChunks = [];
 
-  //ondataavailable will fire in interval of `time || 4000 ms`
-  mediaRecorder.start(1000);
+    //ondataavailable will fire in interval of `time || 4000 ms`
+    mediaRecorder.start(1000);
 
-  mediaRecorder.ondataavailable = function (event) {
-    recordedChunks.push(event.data);
+    mediaRecorder.ondataavailable = function (event) {
+      recordedChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = function (event) {
+      var blob = new Blob(recordedChunks, { type: "video/webm" });
+      var url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("download", "recordingVideo");
+      link.setAttribute("href", url);
+      link.click();
+    };
   };
-
-  window.addEventListener("keydown", () => mediaRecorder.stop());
-
-  mediaRecorder.onstop = function (event) {
-    var blob = new Blob(recordedChunks, { type: "video/webm" });
-    var url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("download", "recordingVideo");
-    link.setAttribute("href", url);
-    link.click();
-  };
-});
+  input.click();
+};
 
 renderer.setAnimationLoop(() => renderer.render(scene, camera));
 
 // animation
 
 async function startRender(video: HTMLVideoElement) {
+  renderer.setDrawingBufferSize(canvas.width, canvas.height, 1);
   renderer.render(scene, camera);
   predictDepth(video);
 }
 
 async function predictDepth(source: HTMLVideoElement) {
   const raw_input = browser.fromPixels(source);
-  const sliced = slice(
-    raw_input,
-    [0, 0, 0],
-    [source.videoWidth / 2, source.videoHeight, 3]
-  );
-  const upsampledraw_input = image.resizeBilinear(sliced, [384, 640]);
+  const upsampledraw_input = image.resizeBilinear(raw_input, [384, 640]);
   const preprocessedInput = expandDims(upsampledraw_input);
   const divided = div(preprocessedInput, 255.0);
   const result = model.predict(divided) as Tensor<Rank>;
   const output = prepareOutput(result);
   const data = await output.data();
 
-  sliced.dispose();
   divided.dispose();
   upsampledraw_input.dispose();
   preprocessedInput.dispose();

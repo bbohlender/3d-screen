@@ -1,6 +1,11 @@
-# 3D Screen
+# video to depth
 
-Turn anything you can screen share into a live 3D Hologram for Looking Glass directly in the browser.
+## How to use
+
+0. Check if your browser suports webgpu "https://webgpu.github.io/webgpu-samples/samples/helloTriangle"
+1. visit "https://bbohlender.github.io/depth-prediction/"
+2. Press anywhere on and select a video
+3. Wait till the video is done and until the output file is downloaded
 
 ## Credits
 
